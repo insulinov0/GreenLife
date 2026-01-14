@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Мои заказы - Магазин Здоровья</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+    <div class="container orders-container">
+        <header class="orders-header">
+            <button class="back-btn" onclick="goBack()">
+                <i class="fas fa-arrow-left"></i>
+            </button>
+            <div class="header-title">
+                <i class="fas fa-shopping-bag"></i>
+                <h1>Мои заказы</h1>
+            </div>
+            <button class="home-btn" onclick="goHome()">
+                <i class="fas fa-home"></i>
+            </button>
+        </header>
+
+        <div class="orders-stats">
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="stat-info">
+                    <span class="stat-value" id="pending-count">0</span>
+                    <span class="stat-label">Ожидают</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-shipping-fast"></i>
+                </div>
+                <div class="stat-info">
+                    <span class="stat-value" id="shipped-count">0</span>
+                    <span class="stat-label">В пути</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="stat-info">
+                    <span class="stat-value" id="delivered-count">0</span>
+                    <span class="stat-label">Доставлено</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="orders-filter">
+            <button class="filter-btn active" onclick="filterOrders('all')">Все</button>
+            <button class="filter-btn" onclick="filterOrders('new')">Новые</button>
+            <button class="filter-btn" onclick="filterOrders('processing')">В обработке</button>
+            <button class="filter-btn" onclick="filterOrders('delivered')">Доставленные</button>
+        </div>
+
+        <main class="orders-main">
+            <div class="orders-list" id="orders-container">
+                <!-- Заказы будут загружены через JavaScript -->
+            </div>
+        </main>
+
+        <div class="orders-help">
+            <div class="help-card">
+                <i class="fas fa-question-circle"></i>
+                <div class="help-content">
+                    <h3>Нужна помощь?</h3>
+                    <p>По вопросам заказов обращайтесь в поддержку:</p>
+                    <a href="https://t.me/HealthShopSupport" class="support-link">
+                        <i class="fab fa-telegram"></i> @HealthShopSupport
+                    </a>
+                    <p class="help-phone">
+                        <i class="fas fa-phone"></i> +7 (999) 123-45-67
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <footer class="orders-footer">
+            <button class="btn-primary" onclick="window.location.href='index.html'">
+                <i class="fas fa-shopping-cart"></i> Вернуться в магазин
+            </button>
+        </footer>
+
+        <!-- Уведомление -->
+        <div class="notification" id="notification"></div>
+    </div>
+
+    <script src="shop-complete.js"></script>
+    <script>
+        // Дополнительные функции для страницы заказов
+        function goBack() {
+            if (window.history.length > 1) {
+                window.history.back();
+            } else {
+                window.location.href = 'index.html';
+            }
+        }
+
+        function goHome() {
+            window.location.href = 'index.html';
+        }
+
+        function filterOrders(status) {
+            const buttons = document.querySelectorAll('.filter-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            const orders = JSON.parse(localStorage.getItem('customerOrders') || '[]');
+            let filteredOrders = orders;
+            
+            if (status !== 'all') {
+                filteredOrders = orders.filter(order => order.status === status);
+            }
+            
+            // Сортируем по дате
+            filteredOrders.sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            updateOrdersDisplay(filteredOrders);
+            updateStats(orders);
+        }
+
+        function updateOrdersDisplay(orders) {
+            const container = document.getElementById('orders-container');
+            
+            if (orders.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-box-open"></i>
+                        <h3>Заказы не найдены</h3>
+                        <p>Попробуйте выбрать другую категорию</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = orders.map(order => `
+                <div class="order-card status-${order.status}">
+                    <div class="order-header">
+                        <div class="order-id">Заказ #${order.id}</div>
+                        <div class="order-status">${getStatusText(order.status)}</div>
+                    </div>
+                    
+                    <div class="order-date">
+                        ${new Date(order.date).toLocaleString('ru-RU')}
+                    </div>
+                    
+                    <div class="order-items">
+                        <h4>Состав заказа:</h4>
+                        ${order.items.map(item => `
+                            <div class="order-item">
+                                <span class="item-name">${item.name}</span>
+                                <span class="item-quantity">×${item.quantity}</span>
+                                <span class="item-price">${item.total} ₽</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                    
+                    <div class="order-total">
+                        <span>Итого:</span>
+                        <span class="total-amount">${order.total} ₽</span>
+                    </div>
+                    
+                    <div class="order-actions">
+                        <button class="btn-secondary" onclick="repeatOrder('${order.id}')">
+                            <i class="fas fa-redo"></i> Повторить заказ
+                        </button>
+                        ${order.status === 'new' ? `
+                            <button class="btn-cancel" onclick="cancelOrder('${order.id}')">
+                                <i class="fas fa-times"></i> Отменить
+                            </button>
+                        ` : ''}
+                    </div>
+                    
+                    ${order.comment ? `
+                        <div class="order-comment-display">
+                            <strong>Ваш комментарий:</strong> ${order.comment}
+                        </div>
+                    ` : ''}
+                    
+                    <div class="order-timeline">
+                        <div class="timeline-step ${order.status === 'new' || order.status === 'processing' || order.status === 'shipped' || order.status === 'delivered' ? 'active' : ''}">
+                            <div class="timeline-dot"></div>
+                            <span>Оформлен</span>
+                        </div>
+                        <div class="timeline-step ${order.status === 'processing' || order.status === 'shipped' || order.status === 'delivered' ? 'active' : ''}">
+                            <div class="timeline-dot"></div>
+                            <span>В обработке</span>
+                        </div>
+                        <div class="timeline-step ${order.status === 'shipped' || order.status === 'delivered' ? 'active' : ''}">
+                            <div class="timeline-dot"></div>
+                            <span>Отправлен</span>
+                        </div>
+                        <div class="timeline-step ${order.status === 'delivered' ? 'active' : ''}">
+                            <div class="timeline-dot"></div>
+                            <span>Доставлен</span>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateStats(orders) {
+            const pending = orders.filter(o => o.status === 'new' || o.status === 'processing').length;
+            const shipped = orders.filter(o => o.status === 'shipped').length;
+            const delivered = orders.filter(o => o.status === 'delivered').length;
+            
+            document.getElementById('pending-count').textContent = pending;
+            document.getElementById('shipped-count').textContent = shipped;
+            document.getElementById('delivered-count').textContent = delivered;
+        }
+
+        function getStatusText(status
