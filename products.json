@@ -1,0 +1,36 @@
+{
+  "products": [
+    {
+      "id": 1,
+      "name": "Витаминный комплекс",
+      "description": "Полный набор витаминов для укрепления иммунитета",
+      "price": 1200,
+      "image": "https://via.placeholder.com/150",
+      "category": "витамины"
+    },
+    {
+      "id": 2,
+      "name": "Омега-3",
+      "description": "Рыбий жир высшего качества",
+      "price": 950,
+      "image": "https://via.placeholder.com/150",
+      "category": "БАДы"
+    },
+    {
+      "id": 3,
+      "name": "Травяной чай",
+      "description": "Успокаивающий сбор из экологически чистых трав",
+      "price": 450,
+      "image": "https://via.placeholder.com/150",
+      "category": "чаи"
+    },
+    {
+      "id": 4,
+      "name": "Аромадиффузор",
+      "description": "Для ароматерапии с эфирными маслами",
+      "price": 2200,
+      "image": "https://via.placeholder.com/150",
+      "category": "ароматерапия"
+    }
+  ]
+}
